@@ -30,7 +30,7 @@ public interface ExtendedStream extends Stream {
     }
 
     static <T extends Enum<T>> Stream<T> of(Class<T> e){
-        return of(e.getEnumConstants()).map(obj -> (T) obj);
+        return of(e.getEnumConstants());
     }
 
     static <T,U> Stream<Map.Entry<T,U>> of(Map<T,U> map){
