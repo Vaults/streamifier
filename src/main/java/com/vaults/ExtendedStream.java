@@ -29,8 +29,8 @@ public interface ExtendedStream extends Stream {
         return of(() -> iterator);
     }
 
-    static Stream<Enum> of(Enum e){
-        return of(e.getDeclaringClass().getEnumConstants()).map(obj -> (Enum) obj);
+    static <T extends Enum<T>> Stream<T> of(Class<T> e){
+        return of(e.getEnumConstants()).map(obj -> (T) obj);
     }
 
     static <T,U> Stream<Map.Entry<T,U>> of(Map<T,U> map){
