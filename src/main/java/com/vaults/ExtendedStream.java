@@ -4,9 +4,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -41,8 +41,12 @@ public interface ExtendedStream extends Stream {
         return IntStream.range(0, list.getLength()).mapToObj(list::item);
     }
 
-    static <T> Stream<T> of(ResultSet set, Function<ResultSet, T> mapper, Consumer<Exception> exceptionConsumer){
-        return of(new ResultSetIterable<T>(set, mapper, exceptionConsumer));
+    static <T> Stream<T> of(ResultSet set, CheckedFunction<ResultSet, T> mapper, Consumer<Exception> exceptionConsumer){
+        return of(set, mapper, exceptionConsumer, exceptionConsumer::accept);
+    }
+
+    static <T> Stream<T> of(ResultSet set, CheckedFunction<ResultSet, T> mapper, Consumer<Exception> exceptionConsumer, Consumer<SQLException> sqlExceptionConsumer){
+        return of(new ResultSetIterable<T>(set, mapper, exceptionConsumer, sqlExceptionConsumer));
     }
 
 

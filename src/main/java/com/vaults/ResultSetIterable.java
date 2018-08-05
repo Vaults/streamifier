@@ -2,6 +2,7 @@ package com.vaults;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -9,13 +10,15 @@ import java.util.function.Function;
 public class ResultSetIterable<T> implements Iterable<T> {
 
     private ResultSet set;
-    private Function<ResultSet, T> mapper;
+    private CheckedFunction<ResultSet, T> mapper;
     private Consumer<Exception> exceptionHandler;
+    private Consumer<SQLException> sqlExceptionHandler;
 
-    ResultSetIterable(ResultSet set, Function<ResultSet, T> mapper, Consumer<Exception> exceptionHandler){
+    ResultSetIterable(ResultSet set, CheckedFunction<ResultSet, T> mapper, Consumer<Exception> exceptionHandler, Consumer<SQLException> sqlExceptionHandler){
         this.set = set;
         this.mapper = mapper;
         this.exceptionHandler = exceptionHandler;
+        this.sqlExceptionHandler = sqlExceptionHandler;
     }
 
     @Override
@@ -32,18 +35,25 @@ public class ResultSetIterable<T> implements Iterable<T> {
 
                 @Override
                 public T next() {
-                    T value = mapper.apply(set);
+                    T value = null;
+
                     try {
+                        value = mapper.apply(set);
                         hasNext = set.next();
-                    } catch (SQLException e) {
+                    } catch (SQLException e){
+                        hasNext = false;
+                        sqlExceptionHandler.accept(e);
+                    } catch (Exception e) {
+                        hasNext = false;
                         exceptionHandler.accept(e);
                     }
+
                     return value;
                 }
             };
         } catch (SQLException e) {
-            exceptionHandler.accept(e);
-            return null;
+            sqlExceptionHandler.accept(e);
+            return Collections.emptyIterator();
         }
     }
 }
